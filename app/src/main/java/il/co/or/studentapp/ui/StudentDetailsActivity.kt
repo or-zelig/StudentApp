@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import il.co.or.studentapp.MainActivity
 import il.co.or.studentapp.R
 import il.co.or.studentapp.data.StudentRepository
 import il.co.or.studentapp.util.Nav
@@ -23,19 +24,16 @@ class StudentDetailsActivity : AppCompatActivity() {
 
         val data = result.data ?: return@registerForActivityResult
 
-        // אם מחקו את הסטודנט במסך העריכה
         if (data.getBooleanExtra(Nav.RESULT_DELETED, false)) {
             finish()
             return@registerForActivityResult
         }
 
-        // אם ה-ID השתנה בעריכה
         val updatedId = data.getStringExtra(Nav.RESULT_UPDATED_ID)
         if (!updatedId.isNullOrBlank()) {
             currentId = updatedId
         }
 
-        // רענון תמידי אחרי חזרה מה-edit
         currentId?.let { renderStudent(it) }
     }
 
@@ -43,14 +41,12 @@ class StudentDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_details)
 
-        // קבלת ID מה-Intent
         currentId = intent.getStringExtra(Nav.EXTRA_STUDENT_ID)
         val id = currentId ?: run {
             finish()
             return
         }
 
-        // הצגה ראשונית
         renderStudent(id)
 
         // Edit
@@ -61,6 +57,25 @@ class StudentDetailsActivity : AppCompatActivity() {
             }
             editLauncher.launch(i)
         }
+
+        findViewById<Button>(R.id.btnDelete).setOnClickListener {
+            val id = currentId ?: return@setOnClickListener
+            StudentRepository.delete(id)
+            finish()
+        }
+
+        findViewById<Button>(R.id.btnBackToList).setOnClickListener {
+            finish()
+        }
+
+        findViewById<Button>(R.id.btnBackToMain).setOnClickListener {
+            val i = Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            }
+            startActivity(i)
+            finish()
+        }
+
     }
 
     override fun onResume() {
