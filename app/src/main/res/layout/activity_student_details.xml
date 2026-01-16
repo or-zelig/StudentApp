@@ -28,4 +28,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Edit" />
+
+    <Button
+        android:id="@+id/btnDelete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete" />
+
+    <Button
+        android:id="@+id/btnBackToList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back to List" />
+
+    <Button
+        android:id="@+id/btnBackToMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back to Main" />
+
 </LinearLayout>
