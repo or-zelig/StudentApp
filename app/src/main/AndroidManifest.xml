@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StudentApp"
         tools:targetApi="31">
+
+        <activity android:name=".ui.EditStudentActivity" />
+        <activity android:name=".ui.StudentDetailsActivity" />
+        <activity android:name=".ui.NewStudentActivity" />
+        <activity android:name=".ui.StudentsListActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
