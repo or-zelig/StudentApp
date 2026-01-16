@@ -2,7 +2,11 @@ package il.co.or.studentapp.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import il.co.or.studentapp.R
 import il.co.or.studentapp.data.StudentRepository
@@ -12,47 +16,76 @@ class StudentDetailsActivity : AppCompatActivity() {
 
     private var currentId: String? = null
 
+    private val editLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+
+        val data = result.data ?: return@registerForActivityResult
+
+        // אם מחקו את הסטודנט במסך העריכה
+        if (data.getBooleanExtra(Nav.RESULT_DELETED, false)) {
+            finish()
+            return@registerForActivityResult
+        }
+
+        // אם ה-ID השתנה בעריכה
+        val updatedId = data.getStringExtra(Nav.RESULT_UPDATED_ID)
+        if (!updatedId.isNullOrBlank()) {
+            currentId = updatedId
+        }
+
+        // רענון תמידי אחרי חזרה מה-edit
+        currentId?.let { renderStudent(it) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_details)
 
-        val tvName = findViewById<TextView>(R.id.tvName)
-        val tvId = findViewById<TextView>(R.id.tvId)
-        val cbChecked = findViewById<CheckBox>(R.id.cbCheckedReadOnly)
-        val btnEdit = findViewById<Button>(R.id.btnEdit)
-
+        // קבלת ID מה-Intent
         currentId = intent.getStringExtra(Nav.EXTRA_STUDENT_ID)
+        val id = currentId ?: run {
+            finish()
+            return
+        }
 
-        val student = currentId?.let { StudentRepository.getById(it) }
+        // הצגה ראשונית
+        renderStudent(id)
+
+        // Edit
+        findViewById<Button>(R.id.btnEdit).setOnClickListener {
+            val current = currentId ?: return@setOnClickListener
+            val i = Intent(this, EditStudentActivity::class.java).apply {
+                putExtra(Nav.EXTRA_STUDENT_ID, current)
+            }
+            editLauncher.launch(i)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // אם משהו השתנה (גם בלי ActivityResult), נרענן
+        currentId?.let { renderStudent(it) }
+    }
+
+    private fun renderStudent(id: String) {
+        val student = StudentRepository.getById(id)
         if (student == null) {
             Toast.makeText(this, "Student not found", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        tvName.text = student.name
-        tvId.text = "ID: ${student.id}"
-        cbChecked.isChecked = student.isChecked
-        cbChecked.isEnabled = false
-
-        btnEdit.setOnClickListener {
-            val i = Intent(this, EditStudentActivity::class.java).apply {
-                putExtra(Nav.EXTRA_STUDENT_ID, student.id) // משתמשים ב־ID כ-key
-            }
-            startActivity(i)
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        val id = currentId ?: return
-        val student = StudentRepository.getById(id) ?: return
-
         findViewById<TextView>(R.id.tvName).text = student.name
         findViewById<TextView>(R.id.tvId).text = "ID: ${student.id}"
-        findViewById<CheckBox>(R.id.cbCheckedReadOnly).isChecked = student.isChecked
 
-        // אם ה־ID השתנה בעריכה, נעדכן currentId כדי לא "לאבד" את הסטודנט
+        findViewById<CheckBox>(R.id.cbCheckedReadOnly).apply {
+            isChecked = student.isChecked
+            isEnabled = false
+        }
+
+        // אם ה-Repository אצלך מאפשר שינוי ID, נשמור את החדש כדי לא "לאבד" סטודנט
         currentId = student.id
     }
 }

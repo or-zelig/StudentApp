@@ -52,14 +52,24 @@ class EditStudentActivity : AppCompatActivity() {
             )
 
             StudentRepository.update(originalId!!, updated)
-            // חשוב: אם ID השתנה - נעדכן originalId כדי שהמסך שמעל יוכל להמשיך לעבוד
             originalId = updated.id
+
+            intent = intent.apply {
+                putExtra(Nav.RESULT_UPDATED_ID, updated.id)
+            }
+            setResult(RESULT_OK, intent)
             finish()
         }
 
         btnDelete.setOnClickListener {
             StudentRepository.delete(originalId!!)
+
+            intent = intent.apply {
+                putExtra(Nav.RESULT_DELETED, true)
+            }
+            setResult(RESULT_OK, intent)
             finish()
+
         }
     }
 
